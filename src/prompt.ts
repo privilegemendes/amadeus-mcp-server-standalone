@@ -213,7 +213,7 @@ server.prompt(
       .length(3)
       .describe('Origin airport IATA code (e.g., MAD)'),
     maxPrice: z
-      .number()
+      .string()
       .optional()
       .describe('Maximum budget for flights'),
     departureDate: z
@@ -267,9 +267,9 @@ server.prompt(
       .length(3)
       .describe('Airport IATA code (e.g., JFK)'),
     maxResults: z
-      .number()
+      .string()
       .optional()
-      .default(20)
+      .default("20")
       .describe('Maximum number of routes to show'),
   },
   async ({ airportCode, maxResults }) => {
@@ -309,17 +309,17 @@ server.prompt(
   'find-nearby-airports',
   'Find convenient airports near a specific location',
   {
-    latitude: z.number().min(-90).max(90).describe('Location latitude'),
-    longitude: z.number().min(-180).max(180).describe('Location longitude'),
+    latitude: z.string().describe('Location latitude'),
+    longitude: z.string().describe('Location longitude'),
     radius: z
-      .number()
+      .string()
       .optional()
-      .default(500)
+      .default("500")
       .describe('Search radius in kilometers'),
     maxResults: z
-      .number()
+      .string()
       .optional()
-      .default(10)
+      .default("10")
       .describe('Maximum number of airports to show'),
   },
   async ({ latitude, longitude, radius, maxResults }) => {
@@ -367,7 +367,7 @@ server.prompt(
       .string()
       .length(3)
       .describe('Origin airport IATA code'),
-    budget: z.number().optional().describe('Total budget for flights'),
+    budget: z.string().optional().describe('Total budget for flights'),
     departureDate: z
       .string()
       .optional()
