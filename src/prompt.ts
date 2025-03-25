@@ -202,3 +202,227 @@ Please organize this information clearly to help me make an informed decision ab
     };
   },
 );
+
+// Prompt for discovering flight destinations
+server.prompt(
+  'discover-destinations',
+  'Find inspiring flight destinations within your budget',
+  {
+    originLocationCode: z
+      .string()
+      .length(3)
+      .describe('Origin airport IATA code (e.g., MAD)'),
+    maxPrice: z
+      .number()
+      .optional()
+      .describe('Maximum budget for flights'),
+    departureDate: z
+      .string()
+      .optional()
+      .describe('Preferred departure date or date range (YYYY-MM-DD)'),
+    tripDuration: z
+      .string()
+      .optional()
+      .describe('Desired trip duration in days (e.g., "7" or "2,8" for range)'),
+  },
+  async ({ originLocationCode, maxPrice, departureDate, tripDuration }) => {
+    return {
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `Please help me discover interesting destinations I can fly to from ${originLocationCode}${
+              maxPrice ? ` within a budget of ${maxPrice}` : ''
+            }${departureDate ? ` around ${departureDate}` : ''}${
+              tripDuration ? ` for about ${tripDuration} days` : ''
+            }.
+
+Please use the flight-inspiration tool to find destinations and then:
+
+1. Group destinations by region or country
+2. Highlight the best deals found
+3. Provide insights about seasonal trends
+4. Suggest specific destinations that offer good value
+5. Include any interesting destinations that might be unexpected
+
+For the most interesting options, please use the search-flights tool to find specific flight details.
+If needed, use the search-airports tool to get more information about the destinations.
+
+Please organize the results to help me discover new travel possibilities within my constraints.`,
+          },
+        },
+      ],
+    };
+  },
+);
+
+// Prompt for exploring airport routes
+server.prompt(
+  'explore-airport-routes',
+  'Discover direct routes and connections from an airport',
+  {
+    airportCode: z
+      .string()
+      .length(3)
+      .describe('Airport IATA code (e.g., JFK)'),
+    maxResults: z
+      .number()
+      .optional()
+      .default(20)
+      .describe('Maximum number of routes to show'),
+  },
+  async ({ airportCode, maxResults }) => {
+    return {
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `Please analyze the routes available from ${airportCode} airport.
+
+Please use the airport-routes tool to find direct destinations, and then:
+
+1. Group destinations by region/continent
+2. Highlight major routes with high flight frequency
+3. Identify popular leisure and business destinations
+4. List any seasonal or unique routes
+5. Provide insights about the airport's connectivity
+
+For key routes, please use the search-flights tool to check typical prices and schedules.
+Use the search-airports tool to get more details about the connected airports.
+
+Please organize this information to help understand:
+- The airport's route network
+- Best connection possibilities
+- Popular destinations served
+- Unique route opportunities`,
+          },
+        },
+      ],
+    };
+  },
+);
+
+// Prompt for finding nearby airports
+server.prompt(
+  'find-nearby-airports',
+  'Find convenient airports near a specific location',
+  {
+    latitude: z.number().min(-90).max(90).describe('Location latitude'),
+    longitude: z.number().min(-180).max(180).describe('Location longitude'),
+    radius: z
+      .number()
+      .optional()
+      .default(500)
+      .describe('Search radius in kilometers'),
+    maxResults: z
+      .number()
+      .optional()
+      .default(10)
+      .describe('Maximum number of airports to show'),
+  },
+  async ({ latitude, longitude, radius, maxResults }) => {
+    return {
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `Please help me find convenient airports near latitude ${latitude}, longitude ${longitude}${
+              radius ? ` within ${radius} kilometers` : ''
+            }.
+
+Please use the nearest-airports tool to find airports, and then:
+
+1. Rank airports by convenience (considering distance and flight options)
+2. Provide key information about each airport (size, typical destinations)
+3. Compare transportation options to/from each airport
+4. Highlight any airports with unique advantages
+5. Suggest which airports might be best for different types of trips
+
+For the most relevant airports:
+- Use the airport-routes tool to check available destinations
+- Use the search-flights tool to compare typical prices
+- Consider factors like flight frequency and seasonal variations
+
+Please organize this information to help choose the most suitable airport based on:
+- Distance and accessibility
+- Flight options and frequencies
+- Typical prices
+- Overall convenience for different types of travel`,
+          },
+        },
+      ],
+    };
+  },
+);
+
+// Prompt for comprehensive trip planning
+server.prompt(
+  'plan-complete-trip',
+  'Get comprehensive trip planning assistance',
+  {
+    originLocationCode: z
+      .string()
+      .length(3)
+      .describe('Origin airport IATA code'),
+    budget: z.number().optional().describe('Total budget for flights'),
+    departureDate: z
+      .string()
+      .optional()
+      .describe('Preferred departure date or date range'),
+    tripDuration: z
+      .string()
+      .optional()
+      .describe('Desired trip duration in days'),
+    preferences: z
+      .string()
+      .optional()
+      .describe('Travel preferences (e.g., "beach, culture, food")'),
+  },
+  async ({
+    originLocationCode,
+    budget,
+    departureDate,
+    tripDuration,
+    preferences,
+  }) => {
+    return {
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `Please help me plan a trip from ${originLocationCode}${
+              budget ? ` with a budget of ${budget}` : ''
+            }${departureDate ? ` around ${departureDate}` : ''}${
+              tripDuration ? ` for ${tripDuration} days` : ''
+            }${preferences ? ` focusing on ${preferences}` : ''}.
+
+Please use multiple tools to create a comprehensive trip plan:
+
+1. Use the flight-inspiration tool to discover potential destinations that match my criteria
+2. Use the nearest-airports tool to find alternative departure/arrival airports
+3. Use the airport-routes tool to understand connection possibilities
+4. Use the find-cheapest-dates tool to optimize travel dates
+5. Use the search-flights tool to find specific flight options
+
+Please provide:
+1. Top destination recommendations based on my criteria
+2. Best flight options and routing suggestions
+3. Price analysis and booking timing recommendations
+4. Alternative airports to consider
+5. A complete trip outline with:
+   - Recommended destinations
+   - Flight options and prices
+   - Suggested itinerary
+   - Travel tips and considerations
+
+Please organize all this information into a clear, actionable trip plan.`,
+          },
+        },
+      ],
+    };
+  },
+);

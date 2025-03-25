@@ -25,11 +25,10 @@ if (process.env.AMADEUS_CLIENT_ID && process.env.AMADEUS_CLIENT_SECRET) {
   console.error('Warning: Amadeus credentials not found in environment variables');
 }
 
-// Create MCP server
+// Create MCP server - FIXED VERSION
 export const server = new McpServer({
   name: 'amadeus-mcp-server',
-  version: '1.0.0',
-  tools: [],
+  version: '1.0.0'
 });
 
 // Create a cache instance
@@ -76,7 +75,13 @@ export async function cachedApiCall<T>(
 
 // Start the server
 export async function main() {
-  // Connect resources, tools, and prompts (we'll add these next)
+  // Import all components to register tools, resources, and prompts
+  // This ensures they are properly registered with the server
+  await Promise.all([
+    import('./tools.js'),
+    import('./resources.js'),
+    import('./prompt.js')
+  ]);
 
   // Start server
   console.error('Starting Amadeus Flight MCP Server...');

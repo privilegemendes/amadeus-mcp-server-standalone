@@ -642,3 +642,355 @@ server.tool(
     }
   },
 );
+
+/**
+ * Tool to search for flight inspiration destinations
+ */
+interface FlightInspirationParams {
+  [key: string]: string | number | boolean | undefined;
+  origin: string;
+  departureDate?: string;
+  oneWay?: boolean;
+  duration?: string;
+  nonStop?: boolean;
+  maxPrice?: number;
+  viewBy?: 'COUNTRY' | 'DATE' | 'DESTINATION' | 'DURATION' | 'WEEK';
+}
+
+interface FlightDestination {
+  type: string;
+  origin: string;
+  destination: string;
+  departureDate: string;
+  returnDate?: string;
+  price: {
+    total: string;
+  };
+  links: {
+    flightDates: string;
+    flightOffers: string;
+  };
+}
+
+interface FlightInspirationResponse {
+  data: FlightDestination[];
+}
+
+server.tool(
+  'flight-inspiration',
+  'Find the cheapest destinations where you can fly to',
+  {
+    origin: z
+      .string()
+      .length(3)
+      .describe('Origin airport/city IATA code (e.g., MAD)'),
+    departureDate: z
+      .string()
+      .optional()
+      .describe('Departure date or range (YYYY-MM-DD or YYYY-MM-DD,YYYY-MM-DD)'),
+    oneWay: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe('Whether to search for one-way flights only'),
+    duration: z
+      .string()
+      .optional()
+      .describe('Duration of stay in days (e.g., "7" or "2,8" for range)'),
+    nonStop: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe('Whether to search for non-stop flights only'),
+    maxPrice: z
+      .number()
+      .optional()
+      .describe('Maximum price limit'),
+    viewBy: z
+      .enum(['COUNTRY', 'DATE', 'DESTINATION', 'DURATION', 'WEEK'])
+      .optional()
+      .describe('How to group the results'),
+  },
+  async ({
+    origin,
+    departureDate,
+    oneWay,
+    duration,
+    nonStop,
+    maxPrice,
+    viewBy,
+  }) => {
+    try {
+      const params: FlightInspirationParams = {
+        origin,
+        departureDate,
+        oneWay,
+        duration,
+        nonStop,
+        maxPrice,
+        viewBy,
+      };
+
+      // Remove undefined values
+      for (const key of Object.keys(params)) {
+        if (params[key] === undefined) {
+          delete params[key];
+        }
+      }
+
+      const response = (await amadeus.shopping.flightDestinations.get(
+        params,
+      )) as FlightInspirationResponse;
+
+      // Format the response for better readability
+      const formattedResults = response.data.map((destination) => ({
+        destination: destination.destination,
+        departureDate: destination.departureDate,
+        returnDate: destination.returnDate,
+        price: destination.price.total,
+        links: destination.links,
+      }));
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(formattedResults, null, 2),
+          },
+        ],
+      };
+    } catch (error: unknown) {
+      console.error('Error searching flight inspiration:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error searching flight inspiration: ${
+              error instanceof Error ? error.message : 'Unknown error'
+            }`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  },
+);
+
+/**
+ * Tool to search for airport routes
+ */
+interface AirportRoutesParams {
+  [key: string]: string | number | undefined;
+  departureAirportCode: string;
+  max?: number;
+}
+
+interface AirportRoute {
+  type: string;
+  subtype: string;
+  name: string;
+  iataCode: string;
+  distance: {
+    value: number;
+    unit: string;
+  };
+  analytics?: {
+    flights?: {
+      score?: number;
+    };
+    travelers?: {
+      score?: number;
+    };
+  };
+}
+
+interface AirportRoutesResponse {
+  data: AirportRoute[];
+}
+
+server.tool(
+  'airport-routes',
+  'Find direct routes from a specific airport',
+  {
+    departureAirportCode: z
+      .string()
+      .length(3)
+      .describe('Departure airport IATA code (e.g., JFK)'),
+    maxResults: z
+      .number()
+      .min(1)
+      .max(100)
+      .optional()
+      .default(10)
+      .describe('Maximum number of results'),
+  },
+  async ({ departureAirportCode, maxResults }) => {
+    try {
+      const params: AirportRoutesParams = {
+        departureAirportCode,
+        max: maxResults,
+      };
+
+      // Remove undefined values
+      for (const key of Object.keys(params)) {
+        if (params[key] === undefined) {
+          delete params[key];
+        }
+      }
+
+      const response = (await amadeus.airport.directDestinations.get(
+        params,
+      )) as AirportRoutesResponse;
+
+      // Format the response for better readability
+      const formattedResults = response.data.map((route) => ({
+        destination: route.iataCode,
+        name: route.name,
+        type: route.subtype,
+        distance: `${route.distance.value} ${route.distance.unit}`,
+        flightScore: route.analytics?.flights?.score || 'N/A',
+        travelerScore: route.analytics?.travelers?.score || 'N/A',
+      }));
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(formattedResults, null, 2),
+          },
+        ],
+      };
+    } catch (error: unknown) {
+      console.error('Error searching airport routes:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error searching airport routes: ${
+              error instanceof Error ? error.message : 'Unknown error'
+            }`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  },
+);
+
+/**
+ * Tool to find nearest relevant airports
+ */
+interface NearestAirportParams {
+  [key: string]: string | number | undefined;
+  latitude: number;
+  longitude: number;
+  radius?: number;
+  max?: number;
+}
+
+interface NearestAirport {
+  type: string;
+  subtype: string;
+  name: string;
+  detailedName: string;
+  iataCode: string;
+  distance: {
+    value: number;
+    unit: string;
+  };
+  analytics?: {
+    flights?: {
+      score?: number;
+    };
+    travelers?: {
+      score?: number;
+    };
+  };
+}
+
+interface NearestAirportResponse {
+  data: NearestAirport[];
+}
+
+server.tool(
+  'nearest-airports',
+  'Find nearest relevant airports to a specific location',
+  {
+    latitude: z
+      .number()
+      .min(-90)
+      .max(90)
+      .describe('Latitude of the location'),
+    longitude: z
+      .number()
+      .min(-180)
+      .max(180)
+      .describe('Longitude of the location'),
+    radius: z
+      .number()
+      .optional()
+      .default(500)
+      .describe('Search radius in kilometers'),
+    maxResults: z
+      .number()
+      .min(1)
+      .max(100)
+      .optional()
+      .default(10)
+      .describe('Maximum number of results'),
+  },
+  async ({ latitude, longitude, radius, maxResults }) => {
+    try {
+      const params: NearestAirportParams = {
+        latitude,
+        longitude,
+        radius,
+        max: maxResults,
+      };
+
+      // Remove undefined values
+      for (const key of Object.keys(params)) {
+        if (params[key] === undefined) {
+          delete params[key];
+        }
+      }
+
+      const response = (await amadeus.referenceData.locations.airports.get(
+        params,
+      )) as NearestAirportResponse;
+
+      // Format the response for better readability
+      const formattedResults = response.data.map((airport) => ({
+        code: airport.iataCode,
+        name: airport.name,
+        detailedName: airport.detailedName,
+        type: airport.subtype,
+        distance: `${airport.distance.value} ${airport.distance.unit}`,
+        flightScore: airport.analytics?.flights?.score || 'N/A',
+        travelerScore: airport.analytics?.travelers?.score || 'N/A',
+      }));
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(formattedResults, null, 2),
+          },
+        ],
+      };
+    } catch (error: unknown) {
+      console.error('Error finding nearest airports:', error);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: `Error finding nearest airports: ${
+              error instanceof Error ? error.message : 'Unknown error'
+            }`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  },
+);
