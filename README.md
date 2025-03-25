@@ -2,6 +2,10 @@
 
 This is a Model Context Protocol (MCP) server that connects to the Amadeus API to provide flight search, booking, and analysis capabilities for AI assistants.
 
+<a href="https://glama.ai/mcp/servers/@privilegemendes/amadeus-mcp-server-standalone">
+  <img width="380" height="200" src="https://glama.ai/mcp/servers/@privilegemendes/amadeus-mcp-server-standalone/badge" alt="Amadeus Server MCP server" />
+</a>
+
 ## Features
 
 - **Flight Search**: Find flights between airports with various parameters
@@ -165,4 +169,4 @@ The server provides schema resources for:
 
 ## License
 
-MIT 
+MIT
