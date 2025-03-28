@@ -1,5 +1,5 @@
-import { type AnalyzedQuery, TravelQueryType } from './queryAnalyzer';
-import { server } from './index';
+import { type AnalyzedQuery, TravelQueryType } from './queryAnalyzer.js';
+import { server } from './index.js';
 
 // Interface for tool selection and parameter mapping
 interface ToolMapping {
