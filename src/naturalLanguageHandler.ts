@@ -1,6 +1,6 @@
-import { analyzeQuery } from './queryAnalyzer';
-import { processQuery } from './queryProcessor';
-import { server } from './index';
+import { analyzeQuery } from './queryAnalyzer.js';
+import { processQuery } from './queryProcessor.js';
+import { server } from './index.js';
 import { z } from 'zod';
 
 // Interface for the natural language response
