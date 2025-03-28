@@ -1,6 +1,6 @@
 import { z } from 'zod';
 // Tool to search for flights
-import { amadeus, cachedApiCall, server } from './index';
+import { amadeus, cachedApiCall, server } from './index.js';
 
 // Define interfaces for Amadeus API responses and parameters
 interface FlightParams {
@@ -191,7 +191,7 @@ server.tool(
         }
       }
 
-      const response = (await amadeus.shopping.flightOffers.get(
+      const response = (await amadeus.shopping.flightOffersSearch.get(
         params,
       )) as FlightOfferResponse;
 

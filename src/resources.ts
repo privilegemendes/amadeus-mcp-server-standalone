@@ -1,5 +1,5 @@
 // Schema resources
-import { server } from './index';
+import { server } from './index.js';
 
 server.resource(
   'flight-offer-schema',

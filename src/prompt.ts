@@ -1,6 +1,6 @@
 import { z } from 'zod';
 // Prompt for analyzing flight prices
-import { server } from './index';
+import { server } from './index.js';
 
 server.prompt(
   'analyze-flight-prices',
